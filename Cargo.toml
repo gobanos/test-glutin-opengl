@@ -1,0 +1,13 @@
+[package]
+name = "test-glutin"
+version = "0.1.0"
+authors = ["Grégory OBANOS <gregory.obanos@gmail.com>"]
+
+[dependencies]
+# Graphic library
+gl = "*"
+glutin = "*"
+libc = "*"
+
+# Tools
+error-chain = "*"
