@@ -9,5 +9,9 @@ gl = "*"
 glutin = "*"
 libc = "*"
 
+# Math
+glm = "*"
+num-traits = "*"
+
 # Tools
 error-chain = "*"
