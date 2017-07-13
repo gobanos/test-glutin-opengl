@@ -16,12 +16,109 @@ use glutin::GlContext;
 use errors::*;
 use gl::types::*;
 use num_traits::identities::One;
+
 use std::ffi::CString;
+use std::mem;
 
 static VERTEX_BUFFER_DATA: &[GLfloat] = &[
-    -1.0, -1.0,  0.0,
-     1.0, -1.0,  0.0,
-     0.0,  1.0,  0.0,
+    // triangle 1
+    -1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+
+    // triangle 2
+     1.0,  1.0, -1.0,
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+
+    // triangle 3
+     1.0, -1.0,  1.0,
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+
+    // triangle 4
+     1.0,  1.0, -1.0,
+     1.0, -1.0, -1.0,
+    -1.0, -1.0, -1.0,
+
+    // triangle 5
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0,  1.0,
+    -1.0,  1.0, -1.0,
+
+    // triangle 6
+     1.0, -1.0,  1.0,
+    -1.0, -1.0,  1.0,
+    -1.0, -1.0, -1.0,
+
+    // triangle 7
+    -1.0,  1.0,  1.0,
+    -1.0, -1.0,  1.0,
+     1.0, -1.0,  1.0,
+
+    // triangle 8
+     1.0,  1.0,  1.0,
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+
+    // triangle 9
+     1.0, -1.0, -1.0,
+     1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
+
+    // triangle 10
+     1.0,  1.0,  1.0,
+     1.0,  1.0, -1.0,
+    -1.0,  1.0, -1.0,
+
+    // triangle 11
+     1.0,  1.0,  1.0,
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+
+    // triangle 12
+     1.0,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
+];
+
+static COLOR_BUFFER_DATA: &[GLfloat] = &[
+    0.583, 0.771, 0.014,
+    0.609, 0.115, 0.436,
+    0.327, 0.483, 0.844,
+    0.822, 0.569, 0.201,
+    0.435, 0.602, 0.223,
+    0.310, 0.747, 0.185,
+    0.597, 0.770, 0.761,
+    0.559, 0.436, 0.730,
+    0.359, 0.583, 0.152,
+    0.483, 0.596, 0.789,
+    0.559, 0.861, 0.639,
+    0.195, 0.548, 0.859,
+    0.014, 0.184, 0.576,
+    0.771, 0.328, 0.970,
+    0.406, 0.615, 0.116,
+    0.676, 0.977, 0.133,
+    0.971, 0.572, 0.833,
+    0.140, 0.616, 0.489,
+    0.997, 0.513, 0.064,
+    0.945, 0.719, 0.592,
+    0.543, 0.021, 0.978,
+    0.279, 0.317, 0.505,
+    0.167, 0.620, 0.077,
+    0.347, 0.857, 0.137,
+    0.055, 0.953, 0.042,
+    0.714, 0.505, 0.345,
+    0.783, 0.290, 0.734,
+    0.722, 0.645, 0.174,
+    0.302, 0.455, 0.848,
+    0.225, 0.587, 0.040,
+    0.517, 0.713, 0.338,
+    0.053, 0.959, 0.120,
+    0.393, 0.621, 0.362,
+    0.673, 0.211, 0.457,
+    0.820, 0.883, 0.371,
+    0.982, 0.099, 0.879,
 ];
 
 fn run() -> Result<()> {
@@ -42,8 +139,21 @@ fn run() -> Result<()> {
         gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer);
         gl::BufferData(
             gl::ARRAY_BUFFER,
-            std::mem::size_of_val(VERTEX_BUFFER_DATA) as GLsizeiptr,
+            mem::size_of_val(VERTEX_BUFFER_DATA) as GLsizeiptr,
             VERTEX_BUFFER_DATA.as_ptr() as *const _,
+            gl::STATIC_DRAW
+        );
+    }
+
+    // Create Color Buffer
+    let mut color_buffer = 0;
+    unsafe {
+        gl::GenBuffers(1, &mut color_buffer);
+        gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            mem::size_of_val(COLOR_BUFFER_DATA) as GLsizeiptr,
+            COLOR_BUFFER_DATA.as_ptr() as *const _,
             gl::STATIC_DRAW
         );
     }
@@ -65,9 +175,9 @@ fn run() -> Result<()> {
     );
 
     let view = glm::ext::look_at(
-        glm::vec3(4.0, 3.0, 3.0),
-        glm::vec3(0.0, 0.0, 0.0),
-        glm::vec3(0.0, 1.0, 0.0),
+        glm::vec3(4.0, 3.0, 3.0),   // position
+        glm::vec3(0.0, 0.0, 0.0),   // look at
+        glm::vec3(0.0, 1.0, 0.0),   // up vector
     );
 
     let model = glm::Matrix4::one();
@@ -78,7 +188,7 @@ fn run() -> Result<()> {
         let name = CString::new("MVP")
             .chain_err(|| "Failed to parse MVP")?;
         let matrix_id = gl::GetUniformLocation(program, name.as_ptr());
-        gl::UniformMatrix4fv(matrix_id, 1, gl::FALSE, std::mem::transmute(mvp.as_array()));
+        gl::UniformMatrix4fv(matrix_id, 1, gl::FALSE, mem::transmute(mvp.as_array()));
     }
 
     let mut running = true;
@@ -107,6 +217,7 @@ fn run() -> Result<()> {
         }
 
         unsafe {
+            // Bind vertex buffer
             gl::EnableVertexAttribArray(0);
             gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer);
             gl::VertexAttribPointer(
@@ -118,8 +229,20 @@ fn run() -> Result<()> {
                 0 as *const _       // array buffer offset
             );
 
+            // Bind color buffer
+            gl::EnableVertexAttribArray(1);
+            gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer);
+            gl::VertexAttribPointer(
+                1,                  // attribute 1. No particular reason for 1, but must match the layout in the shader.
+                3,                  // size
+                gl::FLOAT,          // type
+                gl::FALSE,          // normalized?
+                0,                  // stride
+                0 as *const _       // array buffer offset
+            );
+
             // Starting from vertex 0, 3 vertices total -> 1 triangle
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            gl::DrawArrays(gl::TRIANGLES, 0, VERTEX_BUFFER_DATA.len() as i32);
             gl::DisableVertexAttribArray(0);
         }
 
@@ -280,6 +403,8 @@ fn build_window(event_loop: &glutin::EventsLoop) -> Result<glutin::GlWindow> {
     unsafe {
         gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
         gl::ClearColor(0.0, 0.0, 0.4, 1.0);
+        gl::Enable(gl::DEPTH_TEST);
+        gl::DepthFunc(gl::LESS);
     }
 
     Ok(gl_window)
