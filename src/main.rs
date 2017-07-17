@@ -82,43 +82,43 @@ static VERTEX_BUFFER_DATA: &[GLfloat] = &[
      1.0, -1.0,  1.0,
 ];
 
-static COLOR_BUFFER_DATA: &[GLfloat] = &[
-    0.583, 0.771, 0.014,
-    0.609, 0.115, 0.436,
-    0.327, 0.483, 0.844,
-    0.822, 0.569, 0.201,
-    0.435, 0.602, 0.223,
-    0.310, 0.747, 0.185,
-    0.597, 0.770, 0.761,
-    0.559, 0.436, 0.730,
-    0.359, 0.583, 0.152,
-    0.483, 0.596, 0.789,
-    0.559, 0.861, 0.639,
-    0.195, 0.548, 0.859,
-    0.014, 0.184, 0.576,
-    0.771, 0.328, 0.970,
-    0.406, 0.615, 0.116,
-    0.676, 0.977, 0.133,
-    0.971, 0.572, 0.833,
-    0.140, 0.616, 0.489,
-    0.997, 0.513, 0.064,
-    0.945, 0.719, 0.592,
-    0.543, 0.021, 0.978,
-    0.279, 0.317, 0.505,
-    0.167, 0.620, 0.077,
-    0.347, 0.857, 0.137,
-    0.055, 0.953, 0.042,
-    0.714, 0.505, 0.345,
-    0.783, 0.290, 0.734,
-    0.722, 0.645, 0.174,
-    0.302, 0.455, 0.848,
-    0.225, 0.587, 0.040,
-    0.517, 0.713, 0.338,
-    0.053, 0.959, 0.120,
-    0.393, 0.621, 0.362,
-    0.673, 0.211, 0.457,
-    0.820, 0.883, 0.371,
-    0.982, 0.099, 0.879,
+static UV_BUFFER_DATA: &[GLfloat] = &[
+    0.000059, 1.0-0.000004,
+    0.000103, 1.0-0.336048,
+    0.335973, 1.0-0.335903,
+    1.000023, 1.0-0.000013,
+    0.667979, 1.0-0.335851,
+    0.999958, 1.0-0.336064,
+    0.667979, 1.0-0.335851,
+    0.336024, 1.0-0.671877,
+    0.667969, 1.0-0.671889,
+    1.000023, 1.0-0.000013,
+    0.668104, 1.0-0.000013,
+    0.667979, 1.0-0.335851,
+    0.000059, 1.0-0.000004,
+    0.335973, 1.0-0.335903,
+    0.336098, 1.0-0.000071,
+    0.667979, 1.0-0.335851,
+    0.335973, 1.0-0.335903,
+    0.336024, 1.0-0.671877,
+    1.000004, 1.0-0.671847,
+    0.999958, 1.0-0.336064,
+    0.667979, 1.0-0.335851,
+    0.668104, 1.0-0.000013,
+    0.335973, 1.0-0.335903,
+    0.667979, 1.0-0.335851,
+    0.335973, 1.0-0.335903,
+    0.668104, 1.0-0.000013,
+    0.336098, 1.0-0.000071,
+    0.000103, 1.0-0.336048,
+    0.000004, 1.0-0.671870,
+    0.336024, 1.0-0.671877,
+    0.000103, 1.0-0.336048,
+    0.336024, 1.0-0.671877,
+    0.335973, 1.0-0.335903,
+    0.667969, 1.0-0.671889,
+    1.000004, 1.0-0.671847,
+    0.667979, 1.0-0.335851,
 ];
 
 fn run() -> Result<()> {
@@ -145,15 +145,15 @@ fn run() -> Result<()> {
         );
     }
 
-    // Create Color Buffer
-    let mut color_buffer = 0;
+    // Create UV Buffer
+    let mut uv_buffer = 0;
     unsafe {
-        gl::GenBuffers(1, &mut color_buffer);
-        gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer);
+        gl::GenBuffers(1, &mut uv_buffer);
+        gl::BindBuffer(gl::ARRAY_BUFFER, uv_buffer);
         gl::BufferData(
             gl::ARRAY_BUFFER,
-            mem::size_of_val(COLOR_BUFFER_DATA) as GLsizeiptr,
-            COLOR_BUFFER_DATA.as_ptr() as *const _,
+            mem::size_of_val(UV_BUFFER_DATA) as GLsizeiptr,
+            UV_BUFFER_DATA.as_ptr() as *const _,
             gl::STATIC_DRAW
         );
     }
@@ -190,6 +190,11 @@ fn run() -> Result<()> {
         let matrix_id = gl::GetUniformLocation(program, name.as_ptr());
         gl::UniformMatrix4fv(matrix_id, 1, gl::FALSE, mem::transmute(mvp.as_array()));
     }
+
+    let _texture = load_bmp("resources/textures/uvtemplate.bmp")
+        .chain_err(|| "Failed to load texture")?;
+
+
 
     let mut running = true;
     while running {
@@ -231,10 +236,10 @@ fn run() -> Result<()> {
 
             // Bind color buffer
             gl::EnableVertexAttribArray(1);
-            gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer);
+            gl::BindBuffer(gl::ARRAY_BUFFER, uv_buffer);
             gl::VertexAttribPointer(
                 1,                  // attribute 1. No particular reason for 1, but must match the layout in the shader.
-                3,                  // size
+                2,                  // size
                 gl::FLOAT,          // type
                 gl::FALSE,          // normalized?
                 0,                  // stride
@@ -384,6 +389,64 @@ fn load_shaders(vertex_file: &str, fragment_file: &str) -> Result<GLuint> {
     }
 
     Ok(program_id)
+}
+
+fn load_bmp(path: &str) -> Result<GLuint> {
+    use std::fs::File;
+    use std::io::Read;
+
+    let mut bmp_file = File::open(path)
+        .chain_err(|| "Unable to open BMP file")?;
+
+    let mut header = [0; 54];
+
+    bmp_file.read_exact(&mut header)
+        .chain_err(|| "Unable to read BMP header")?;
+
+    if &header[0..2] != b"BM" {
+        bail!("Not a correct BMP file");
+    }
+
+    let read_u32 = |offset| unsafe { *mem::transmute::<*const u8, *const u32>(header.as_ptr().offset(offset)) };
+
+    let mut image_size = read_u32(0x22);
+
+    let width = read_u32(0x12);
+    let height = read_u32(0x16);
+
+    if image_size == 0 {
+        image_size = width * height * 3;
+    }
+
+    let mut data = Vec::with_capacity(image_size as usize);
+
+    bmp_file.read_to_end(&mut data)
+        .chain_err(|| "Unable to BMP file")?;
+
+    let mut texture_id = 0;
+    unsafe {
+        gl::GenTextures(1, &mut texture_id);
+
+        gl::BindTexture(gl::TEXTURE_2D, texture_id);
+
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGB as i32,
+            width as i32,
+            height as i32,
+            0,
+            gl::BGR,
+            gl::UNSIGNED_BYTE,
+            data.as_ptr() as *const _
+        );
+
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+        gl::GenerateMipmap(gl::TEXTURE_2D);
+    }
+
+    Ok(texture_id)
 }
 
 fn build_window(event_loop: &glutin::EventsLoop) -> Result<glutin::GlWindow> {
